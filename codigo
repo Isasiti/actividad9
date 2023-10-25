@@ -1,0 +1,54 @@
+from typing import Dict, Any
+class AnalizadorEventos:
+    def __init__(self, nombre_archivo: str):
+        self.nombre_archivo = nombre_archivo
+
+    def procesar_eventos(self) -> Dict[str, Any]:
+        eventos_por_tipo = {}
+        eventos_por_servidor = {}
+        numero_total_eventos = 0
+
+        try:
+            with open(self.nombre_archivo, 'r') as archivo:
+                evento_actual = {}
+                for linea in archivo:
+                    if linea.startswith('Fecha:'):
+                        evento_actual['Fecha'] = linea.split(': ')[1].strip()
+                    elif linea.startswith('Hora:'):
+                        evento_actual['Hora'] = linea.split(': ')[1].strip()
+                    elif linea.startswith('Servidor:'):
+                        evento_actual['Servidor'] = linea.split(': ')[1].strip()
+                    elif linea.startswith('Tipo de evento:'):
+                        evento_actual['Tipo de evento'] = linea.split(': ')[1].strip()
+                    elif linea.startswith('Descripcion:'):
+                        evento_actual['Descripcion'] = linea.split(': ')[1].strip()
+                        numero_total_eventos += 1
+                        # Actualiza el diccionario de eventos por tipo
+                        tipo_evento = evento_actual['Tipo de evento']
+                        eventos_por_tipo[tipo_evento] = eventos_por_tipo.get(tipo_evento, 0) + 1
+                        # Actualiza el diccionario de eventos por servidor
+                        servidor = evento_actual['Servidor']
+                        eventos_por_servidor[servidor] = eventos_por_servidor.get(servidor, 0) + 1
+                        evento_actual = {}
+        except FileNotFoundError:
+            print(f"Error: El archivo '{self.nombre_archivo}' no se encontró.")
+            return None
+        except Exception as e:
+            print(f"Error inesperado: {str(e)}")
+            return None
+
+        estadisticas = {
+            "Número total de eventos": numero_total_eventos,
+            "Eventos por tipo": eventos_por_tipo,
+            "Eventos por servidor": eventos_por_servidor
+        }
+        return estadisticas
+archivo_eventos = 'eventos.txt'
+analizador = AnalizadorEventos(archivo_eventos)
+estadisticas = analizador.procesar_eventos()
+
+if estadisticas is not None:
+    print("Número total de eventos:", estadisticas["Número total de eventos"])
+    print("Eventos por tipo:", estadisticas["Eventos por tipo"])
+    print("Eventos por servidor:", estadisticas["Eventos por servidor"])
+
